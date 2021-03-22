@@ -17,49 +17,45 @@ const List<List> _keyRows = [
   ],
   // Row 2
   const [
-    'q',
-    'w',
-    'e',
-    'r',
-    't',
-    'y',
-    'u',
-    'i',
-    'o',
-    'p',
-  ],
-  // Row 3
-  const [
     'a',
-    's',
+    'b',
+    'c',
     'd',
+    'e',
     'f',
     'g',
     'h',
+    'i',
     'j',
+  ],
+  // Row 3
+  const [
     'k',
     'l',
-    ';',
-    '\'',
+    'm',
+    'n',
+    'o',
+    'p',
+    'q',
+    'r',
+    's',
+    't',
   ],
   // Row 4
   const [
-    'z',
-    'x',
-    'c',
+    'u',
     'v',
-    'b',
-    'n',
-    'm',
+    'w',
+    'x',
+    'y',
+    'z',
+    '!',
     ',',
     '.',
-    '/',
+    '@',
   ],
   // Row 5
-  const [
-    '@',
-    '_',
-  ]
+  const []
 ];
 
 /// Keys for Virtual Keyboard's rows.
@@ -130,9 +126,67 @@ List<List<VirtualKeyboardKey>> _getKeyboardRows() {
 
     // We have to add Action keys to keyboard.
     switch (rowNum) {
-      case 1:
+      // case 1:
+      //   // String keys.
+      //   rowKeys = _getKeyboardRowKeys(rowNum);
+
+      //   // 'Backspace' button.
+      //   rowKeys.add(
+      //     VirtualKeyboardKey(
+      //         keyType: VirtualKeyboardKeyType.Action,
+      //         action: VirtualKeyboardKeyAction.Backspace),
+      //   );
+      //   break;
+      // case 2:
+      //   // String keys.
+      //   rowKeys = _getKeyboardRowKeys(rowNum);
+
+      //   // 'Return' button.
+      //   rowKeys.add(
+      //     VirtualKeyboardKey(
+      //         keyType: VirtualKeyboardKeyType.Action,
+      //         action: VirtualKeyboardKeyAction.Return,
+      //         text: '\n',
+      //         capsText: '\n'),
+      //   );
+      //   break;
+      // case 3:
+      //   // Left Shift
+      //   rowKeys.add(
+      //     VirtualKeyboardKey(
+      //         keyType: VirtualKeyboardKeyType.Action,
+      //         action: VirtualKeyboardKeyAction.Shift),
+      //   );
+
+      //   // String keys.
+      //   rowKeys.addAll(_getKeyboardRowKeys(rowNum));
+
+      //   // Right Shift
+      //   rowKeys.add(
+      //     VirtualKeyboardKey(
+      //         keyType: VirtualKeyboardKeyType.Action,
+      //         action: VirtualKeyboardKeyAction.Shift),
+      //   );
+      //   break;
+      case 4:
         // String keys.
         rowKeys = _getKeyboardRowKeys(rowNum);
+
+        //Left Shift
+        rowKeys.add(
+          VirtualKeyboardKey(
+              keyType: VirtualKeyboardKeyType.Action,
+              action: VirtualKeyboardKeyAction.Shift),
+        );
+
+        // Insert the space key into second position of row.
+        rowKeys.add(
+          VirtualKeyboardKey(
+              keyType: VirtualKeyboardKeyType.Action,
+              text: ' ',
+              capsText: ' ',
+              action: VirtualKeyboardKeyAction.Space),
+        );
 
         // 'Backspace' button.
         rowKeys.add(
@@ -140,50 +194,12 @@ List<List<VirtualKeyboardKey>> _getKeyboardRows() {
               keyType: VirtualKeyboardKeyType.Action,
               action: VirtualKeyboardKeyAction.Backspace),
         );
-        break;
-      case 2:
-        // String keys.
-        rowKeys = _getKeyboardRowKeys(rowNum);
 
-        // 'Return' button.
+        // 'Backspace' button.
         rowKeys.add(
           VirtualKeyboardKey(
               keyType: VirtualKeyboardKeyType.Action,
-              action: VirtualKeyboardKeyAction.Return,
-              text: '\n',
-              capsText: '\n'),
-        );
-        break;
-      case 3:
-        // Left Shift
-        rowKeys.add(
-          VirtualKeyboardKey(
-              keyType: VirtualKeyboardKeyType.Action,
-              action: VirtualKeyboardKeyAction.Shift),
-        );
-
-        // String keys.
-        rowKeys.addAll(_getKeyboardRowKeys(rowNum));
-
-        // Right Shift
-        rowKeys.add(
-          VirtualKeyboardKey(
-              keyType: VirtualKeyboardKeyType.Action,
-              action: VirtualKeyboardKeyAction.Shift),
-        );
-        break;
-      case 4:
-        // String keys.
-        rowKeys = _getKeyboardRowKeys(rowNum);
-
-        // Insert the space key into second position of row.
-        rowKeys.insert(
-          1,
-          VirtualKeyboardKey(
-              keyType: VirtualKeyboardKeyType.Action,
-              text: ' ',
-              capsText: ' ',
-              action: VirtualKeyboardKeyAction.Space),
+              action: VirtualKeyboardKeyAction.Done),
         );
 
         break;

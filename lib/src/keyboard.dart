@@ -1,8 +1,11 @@
 part of virtual_keyboard;
 
+const int _KEY_CENTER = 23;
+
 /// The default keyboard height. Can we overriden by passing
 ///  `height` argument to `VirtualKeyboard` widget.
 const double _virtualKeyboardDefaultHeight = 300;
+const double _virtualKeyboardDefaultWidth = 300;
 
 const int _virtualKeyboardBackspaceEventPerioud = 250;
 
@@ -13,9 +16,13 @@ class VirtualKeyboard extends StatefulWidget {
 
   /// Callback for Key press event. Called with pressed `Key` object.
   final Function onKeyPress;
+  final Function onDone;
 
   /// Virtual keyboard height. Default is 300
   final double height;
+
+  /// Virtual keyboard width. Default is 300
+  final double width;
 
   /// Color for key texts and icons.
   final Color textColor;
@@ -29,15 +36,29 @@ class VirtualKeyboard extends StatefulWidget {
   /// Set to true if you want only to show Caps letters.
   final bool alwaysCaps;
 
+  /// Virtual keyboard title.
+  final String title;
+
+  /// Virtual keyboard starting value
+  final String text;
+
+  /// Virtual keyboard hint text
+  final String hintText;
+
   VirtualKeyboard(
       {Key key,
       @required this.type,
       @required this.onKeyPress,
+      @required this.onDone,
       this.builder,
       this.height = _virtualKeyboardDefaultHeight,
+      this.width = _virtualKeyboardDefaultWidth,
       this.textColor = Colors.black,
       this.fontSize = 14,
-      this.alwaysCaps = false})
+      this.alwaysCaps = false,
+      this.title = 'Enter Text',
+      this.text = '',
+      this.hintText = ''})
       : super(key: key);
 
   @override
@@ -49,13 +70,17 @@ class VirtualKeyboard extends StatefulWidget {
 /// Holds the state for Virtual Keyboard class.
 class _VirtualKeyboardState extends State<VirtualKeyboard> {
   VirtualKeyboardType type;
-  Function onKeyPress;
   // The builder function will be called for each Key object.
   Widget Function(BuildContext context, VirtualKeyboardKey key) builder;
   double height;
+  double width;
   Color textColor;
   double fontSize;
   bool alwaysCaps;
+  String title;
+  String text;
+  String hintText;
+
   // Text Style for keys.
   TextStyle textStyle;
 
@@ -67,11 +92,14 @@ class _VirtualKeyboardState extends State<VirtualKeyboard> {
     super.didUpdateWidget(oldWidget);
     setState(() {
       type = widget.type;
-      onKeyPress = widget.onKeyPress;
       height = widget.height;
+      width = widget.width;
       textColor = widget.textColor;
       fontSize = widget.fontSize;
       alwaysCaps = widget.alwaysCaps;
+      title = widget.title;
+      text = widget.text;
+      hintText = widget.hintText;
 
       // Init the Text Style for keys.
       textStyle = TextStyle(
@@ -86,11 +114,14 @@ class _VirtualKeyboardState extends State<VirtualKeyboard> {
     super.initState();
 
     type = widget.type;
-    onKeyPress = widget.onKeyPress;
     height = widget.height;
+    width = widget.width;
     textColor = widget.textColor;
     fontSize = widget.fontSize;
     alwaysCaps = widget.alwaysCaps;
+    title = widget.title;
+    text = widget.text;
+    hintText = widget.hintText;
 
     // Init the Text Style for keys.
     textStyle = TextStyle(
@@ -99,15 +130,132 @@ class _VirtualKeyboardState extends State<VirtualKeyboard> {
     );
   }
 
+  void onKeyPress(VirtualKeyboardKey key) {
+    if (key.action == VirtualKeyboardKeyAction.Shift) {
+      this.setState(() {
+        alwaysCaps = !alwaysCaps;
+      });
+    } else if (key.action == VirtualKeyboardKeyAction.Backspace) {
+      if (this.text.length > 0) {
+        this.setState(() {
+          this.text = this.text.substring(0, this.text.length - 1);
+        });
+      }
+    } else if (key.action == VirtualKeyboardKeyAction.Space) {
+      this.setState(() {
+        this.text += ' ';
+      });
+    } else if (key.action == VirtualKeyboardKeyAction.Done) {
+      if (widget.onDone != null) {
+        widget.onDone(this.text);
+      }
+    } else {
+      this.setState(() {
+        this.text += alwaysCaps ? key.capsText : key.text;
+      });
+    }
+
+    if (widget.onKeyPress != null) {
+      widget.onKeyPress(key);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return type == VirtualKeyboardType.Numeric ? _numeric() : _alphanumeric();
+    return Center(
+      child: Container(
+        padding: EdgeInsets.all(10),
+        width: widget.width,
+        height: widget.height,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: Colors.grey[700].withOpacity(.9),
+            width: 1,
+          ),
+          color: Colors.grey[900],
+        ),
+        child: Column(
+          children: <Widget>[
+            Container(
+              margin: EdgeInsets.symmetric(horizontal: 4),
+              width: double.infinity,
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  title,
+                  style: TextStyle(
+                    color: Colors.white,
+                  ),
+                  textAlign: TextAlign.left,
+                ),
+              ),
+            ),
+            Container(
+              margin: EdgeInsets.only(left: 4, right: 4, bottom: 5),
+              width: double.infinity,
+              height: 40,
+              decoration: BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(
+                    width: 1,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Row(
+                  children: <Widget>[
+                    Text(
+                      text,
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                      ),
+                      textAlign: TextAlign.left,
+                    ),
+                    Stack(
+                      children: <Widget>[
+                        text == ''
+                            ? Text(hintText,
+                                style: TextStyle(color: Colors.grey[600]))
+                            : Text(''),
+                        BlinkWidget(
+                          children: <Widget>[
+                            Container(
+                              height: 20,
+                              decoration: BoxDecoration(
+                                border: Border(
+                                    left: BorderSide(
+                                        color: Colors.white, width: 1)),
+                              ),
+                            ),
+                            Container(
+                              height: 20,
+                              decoration: BoxDecoration(
+                                border: Border(
+                                    left: BorderSide(
+                                        color: Colors.transparent, width: 1)),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            type == VirtualKeyboardType.Numeric ? _numeric() : _alphanumeric(),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _alphanumeric() {
     return Container(
-      height: height,
-      width: MediaQuery.of(context).size.width,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -118,8 +266,6 @@ class _VirtualKeyboardState extends State<VirtualKeyboard> {
 
   Widget _numeric() {
     return Container(
-      height: height,
-      width: MediaQuery.of(context).size.width,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -161,11 +307,13 @@ class _VirtualKeyboardState extends State<VirtualKeyboard> {
                 switch (virtualKeyboardKey.keyType) {
                   case VirtualKeyboardKeyType.String:
                     // Draw String key.
-                    keyWidget = _keyboardDefaultKey(virtualKeyboardKey);
+                    keyWidget = _KeyboardDefaultKey(
+                        virtualKeyboardKey, onKeyPress, alwaysCaps);
                     break;
                   case VirtualKeyboardKeyType.Action:
                     // Draw action key.
-                    keyWidget = _keyboardDefaultActionKey(virtualKeyboardKey);
+                    keyWidget = _KeyboardDefaultActionKey(
+                        virtualKeyboardKey, onKeyPress);
                     break;
                 }
               } else {
@@ -186,96 +334,303 @@ class _VirtualKeyboardState extends State<VirtualKeyboard> {
 
     return rows;
   }
+}
 
-  // True if long press is enabled.
-  bool longPress;
+/// Creates default UI element for keyboard Key.
+class _KeyboardDefaultKey extends StatefulWidget {
+  final VirtualKeyboardKey currentKey;
+  final onKeyPress;
+  final bool isUppercase;
 
-  /// Creates default UI element for keyboard Key.
-  Widget _keyboardDefaultKey(VirtualKeyboardKey key) {
+  _KeyboardDefaultKey(this.currentKey, this.onKeyPress, this.isUppercase);
+
+  @override
+  State<StatefulWidget> createState() {
+    return _KeyboardDefaultKeyState();
+  }
+}
+
+class _KeyboardDefaultKeyState extends State<_KeyboardDefaultKey> {
+  var isSelected = false;
+
+  @override
+  Widget build(BuildContext context) {
     return Expanded(
-        child: InkWell(
-      onTap: () {
-        onKeyPress(key);
+        child: Focus(
+      onFocusChange: (hasFocus) {
+        if (hasFocus) {
+          print('got focus: ${widget.currentKey.text}');
+        } else {
+          print('lost focus: ${widget.currentKey.text}');
+        }
+        this.setState(() {
+          isSelected = hasFocus;
+        });
+      },
+      onKey: (fn, event) {
+        //focusNode = fn;
+        print('move made');
+        if (event is RawKeyDownEvent && event.data is RawKeyEventDataAndroid) {
+          RawKeyDownEvent rawKeyDownEvent = event;
+          RawKeyEventDataAndroid rawKeyEventDataAndroid = rawKeyDownEvent.data;
+
+          if (rawKeyEventDataAndroid.keyCode == _KEY_CENTER) {
+            widget.onKeyPress(widget.currentKey);
+            return true;
+          }
+        }
+        return false;
       },
       child: Container(
-        height: height / _keyRows.length,
+        margin: EdgeInsets.all(3),
+        decoration: BoxDecoration(
+          color: isSelected ? Colors.white : Color.fromRGBO(50, 50, 50, 1.0),
+          borderRadius: BorderRadius.circular(1),
+        ),
+        height: 40,
         child: Center(
-            child: Text(
-          alwaysCaps
-              ? key.capsText
-              : (isShiftEnabled ? key.capsText : key.text),
-          style: textStyle,
-        )),
+          child: Text(
+            widget.isUppercase
+                ? widget.currentKey.capsText
+                : widget.currentKey.text,
+
+            style: TextStyle(
+              color: isSelected ? Colors.black : Colors.white,
+            ),
+            // alwaysCaps
+            //     ? widget.key.capsText
+            //     : (isShiftEnabled ? widget.key.capsText : widget.key.text),
+            // style: widget.textStyle,
+          ),
+        ),
       ),
     ));
   }
+}
 
-  /// Creates default UI element for keyboard Action Key.
-  Widget _keyboardDefaultActionKey(VirtualKeyboardKey key) {
+/// Creates default UI element for keyboard Key.
+class _KeyboardDefaultActionKey extends StatefulWidget {
+  final VirtualKeyboardKey currentKey;
+  final onKeyPress;
+
+  _KeyboardDefaultActionKey(this.currentKey, this.onKeyPress);
+
+  @override
+  State<StatefulWidget> createState() {
+    return _KeyboardDefaultActionKeyState();
+  }
+}
+
+/// Creates default UI element for keyboard Action Key.
+class _KeyboardDefaultActionKeyState extends State<_KeyboardDefaultActionKey> {
+  var isSelected = false;
+
+  @override
+  Widget build(BuildContext context) {
     // Holds the action key widget.
     Widget actionKey;
 
     // Switch the action type to build action Key widget.
-    switch (key.action) {
+    switch (widget.currentKey.action) {
       case VirtualKeyboardKeyAction.Backspace:
-        actionKey = GestureDetector(
-            onLongPress: () {
-              longPress = true;
-              // Start sending backspace key events while longPress is true
-              Timer.periodic(
-                  Duration(milliseconds: _virtualKeyboardBackspaceEventPerioud),
-                  (timer) {
-                if (longPress) {
-                  onKeyPress(key);
-                } else {
-                  // Cancel timer.
-                  timer.cancel();
-                }
-              });
-            },
-            onLongPressUp: () {
-              // Cancel event loop
-              longPress = false;
-            },
-            child: Container(
-              height: double.infinity,
-              width: double.infinity,
-              child: Icon(
-                Icons.backspace,
-                color: textColor,
-              ),
-            ));
+        actionKey = Container(
+          margin: EdgeInsets.all(3),
+          height: 40,
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: isSelected ? Colors.white : Color.fromRGBO(50, 50, 50, 1.0),
+          ),
+          child: FractionallySizedBox(
+            widthFactor: 0.9,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                Container(
+                  width: 20,
+                  padding: EdgeInsets.all(2),
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: isSelected ? Colors.black : Colors.white,
+                      width: 1,
+                    ),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.fast_rewind,
+                    size: 14,
+                    color: isSelected ? Colors.black : Colors.white,
+                  ),
+                ),
+                Text(" Delete",
+                    style: TextStyle(
+                      color: isSelected ? Colors.black : Colors.white,
+                    ))
+              ],
+            ),
+          ),
+        );
         break;
       case VirtualKeyboardKeyAction.Shift:
-        actionKey = Icon(Icons.arrow_upward, color: textColor);
+        actionKey = Container(
+          margin: EdgeInsets.all(3),
+          height: 40,
+          width: double.infinity,
+          decoration: BoxDecoration(
+              color:
+                  isSelected ? Colors.white : Color.fromRGBO(50, 50, 50, 1.0)),
+          child: FractionallySizedBox(
+            widthFactor: 0.9,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                Container(
+                  width: 20,
+                  padding: EdgeInsets.all(2),
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: isSelected ? Colors.black : Colors.white,
+                      width: 1,
+                    ),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.menu,
+                    size: 14,
+                    color: isSelected ? Colors.black : Colors.white,
+                  ),
+                ),
+                Text(" aA",
+                    style: TextStyle(
+                      color: isSelected ? Colors.black : Colors.white,
+                    ))
+              ],
+            ),
+          ),
+        );
         break;
       case VirtualKeyboardKeyAction.Space:
-        actionKey = actionKey = Icon(Icons.space_bar, color: textColor);
+        actionKey = Container(
+          margin: EdgeInsets.all(3),
+          height: 40,
+          width: double.infinity,
+          decoration: BoxDecoration(
+              color:
+                  isSelected ? Colors.white : Color.fromRGBO(50, 50, 50, 1.0)),
+          child: FractionallySizedBox(
+            widthFactor: 0.9,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                Container(
+                  width: 20,
+                  padding: EdgeInsets.all(2),
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: isSelected ? Colors.black : Colors.white,
+                      width: 1,
+                    ),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.fast_forward,
+                    size: 14,
+                    color: isSelected ? Colors.black : Colors.white,
+                  ),
+                ),
+                Text(" Space",
+                    style: TextStyle(
+                      color: isSelected ? Colors.black : Colors.white,
+                    ))
+              ],
+            ),
+          ),
+        );
         break;
       case VirtualKeyboardKeyAction.Return:
-        actionKey = Icon(
-          Icons.keyboard_return,
-          color: textColor,
+        actionKey = Container(
+            margin: EdgeInsets.all(3),
+            height: 40,
+            width: double.infinity,
+            decoration: BoxDecoration(
+                color: isSelected
+                    ? Colors.white
+                    : Color.fromRGBO(50, 50, 50, 1.0)),
+            child: Icon(
+              Icons.keyboard_return,
+              color: isSelected ? Colors.black : Colors.white,
+            ));
+        break;
+      case VirtualKeyboardKeyAction.Done:
+        actionKey = Container(
+          margin: EdgeInsets.all(3),
+          height: 40,
+          width: double.infinity,
+          decoration: BoxDecoration(
+              color:
+                  isSelected ? Colors.white : Color.fromRGBO(50, 50, 50, 1.0)),
+          child: FractionallySizedBox(
+            widthFactor: 0.9,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                Container(
+                  width: 20,
+                  padding: EdgeInsets.all(2),
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: isSelected ? Colors.black : Colors.white,
+                      width: 1,
+                    ),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.done,
+                    size: 14,
+                    color: isSelected ? Colors.black : Colors.white,
+                  ),
+                ),
+                Text(" Done",
+                    style: TextStyle(
+                      color: isSelected ? Colors.black : Colors.white,
+                    ))
+              ],
+            ),
+          ),
         );
         break;
     }
 
     return Expanded(
-      child: InkWell(
-        onTap: () {
-          if (key.action == VirtualKeyboardKeyAction.Shift) {
-            if (!alwaysCaps) {
-              setState(() {
-                isShiftEnabled = !isShiftEnabled;
-              });
+      child: Focus(
+        onFocusChange: (hasFocus) {
+          if (hasFocus) {
+            print('got focus: ${widget.currentKey.text}');
+          } else {
+            print('lost focus: ${widget.currentKey.text}');
+          }
+          this.setState(() {
+            isSelected = hasFocus;
+          });
+        },
+        onKey: (fn, event) {
+          //focusNode = fn;
+          print('move made');
+          if (event is RawKeyDownEvent &&
+              event.data is RawKeyEventDataAndroid) {
+            RawKeyDownEvent rawKeyDownEvent = event;
+            RawKeyEventDataAndroid rawKeyEventDataAndroid =
+                rawKeyDownEvent.data;
+
+            if (rawKeyEventDataAndroid.keyCode == _KEY_CENTER) {
+              widget.onKeyPress(widget.currentKey);
+              return true;
             }
           }
-
-          onKeyPress(key);
+          return false;
         },
         child: Container(
           alignment: Alignment.center,
-          height: height / _keyRows.length,
+          //height: height / _keyRows.length,
           child: actionKey,
         ),
       ),

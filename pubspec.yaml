@@ -4,6 +4,7 @@ version: 0.1.4
 author: Gurgen Hovhannisyan <g.hovhannisyan@digitalpomegranate.com>
 homepage: https://github.com/gurgenDP/virtual_keyboard
 
+
 environment:
   sdk: ">=2.1.0 <3.0.0"
 
