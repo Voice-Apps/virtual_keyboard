@@ -1,6 +1,10 @@
 part of virtual_keyboard;
 
 const int _KEY_CENTER = 23;
+const int _KEY_HAMBURGER = 82;
+const int _KEY_FAST_FORWARD = 90;
+const int _KEY_REWIND = 89;
+const int _KEY_PLAY_PAUSE = 85;
 
 /// The default keyboard height. Can we overriden by passing
 ///  `height` argument to `VirtualKeyboard` widget.
@@ -131,6 +135,8 @@ class _VirtualKeyboardState extends State<VirtualKeyboard> {
   }
 
   void onKeyPress(VirtualKeyboardKey key) {
+    print('key pressed: $key');
+
     if (key.action == VirtualKeyboardKeyAction.Shift) {
       this.setState(() {
         alwaysCaps = !alwaysCaps;
@@ -157,6 +163,28 @@ class _VirtualKeyboardState extends State<VirtualKeyboard> {
 
     if (widget.onKeyPress != null) {
       widget.onKeyPress(key);
+    }
+  }
+
+  void onKeyPressInt(int keyCode) {
+    if (keyCode == _KEY_HAMBURGER) {
+      this.setState(() {
+        alwaysCaps = !alwaysCaps;
+      });
+    } else if (keyCode == _KEY_REWIND) {
+      if (this.text.length > 0) {
+        this.setState(() {
+          this.text = this.text.substring(0, this.text.length - 1);
+        });
+      }
+    } else if (keyCode == _KEY_FAST_FORWARD) {
+      this.setState(() {
+        this.text += ' ';
+      });
+    } else if (keyCode == _KEY_PLAY_PAUSE) {
+      if (widget.onDone != null) {
+        widget.onDone(this.text);
+      }
     }
   }
 
@@ -307,13 +335,13 @@ class _VirtualKeyboardState extends State<VirtualKeyboard> {
                 switch (virtualKeyboardKey.keyType) {
                   case VirtualKeyboardKeyType.String:
                     // Draw String key.
-                    keyWidget = _KeyboardDefaultKey(
-                        virtualKeyboardKey, onKeyPress, alwaysCaps);
+                    keyWidget = _KeyboardDefaultKey(virtualKeyboardKey,
+                        onKeyPress, onKeyPressInt, alwaysCaps);
                     break;
                   case VirtualKeyboardKeyType.Action:
                     // Draw action key.
                     keyWidget = _KeyboardDefaultActionKey(
-                        virtualKeyboardKey, onKeyPress);
+                        virtualKeyboardKey, onKeyPress, onKeyPressInt);
                     break;
                 }
               } else {
@@ -340,9 +368,11 @@ class _VirtualKeyboardState extends State<VirtualKeyboard> {
 class _KeyboardDefaultKey extends StatefulWidget {
   final VirtualKeyboardKey currentKey;
   final onKeyPress;
+  final onKeyPressInt;
   final bool isUppercase;
 
-  _KeyboardDefaultKey(this.currentKey, this.onKeyPress, this.isUppercase);
+  _KeyboardDefaultKey(
+      this.currentKey, this.onKeyPress, this.onKeyPressInt, this.isUppercase);
 
   @override
   State<StatefulWidget> createState() {
@@ -358,24 +388,31 @@ class _KeyboardDefaultKeyState extends State<_KeyboardDefaultKey> {
     return Expanded(
         child: Focus(
       onFocusChange: (hasFocus) {
-        if (hasFocus) {
-          print('got focus: ${widget.currentKey.text}');
-        } else {
-          print('lost focus: ${widget.currentKey.text}');
-        }
+        // if (hasFocus) {
+        //   print('got focus: ${widget.currentKey.text}');
+        // } else {
+        //   print('lost focus: ${widget.currentKey.text}');
+        // }
         this.setState(() {
           isSelected = hasFocus;
         });
       },
       onKey: (fn, event) {
         //focusNode = fn;
-        print('move made');
+        //print('move made');
         if (event is RawKeyDownEvent && event.data is RawKeyEventDataAndroid) {
           RawKeyDownEvent rawKeyDownEvent = event;
           RawKeyEventDataAndroid rawKeyEventDataAndroid = rawKeyDownEvent.data;
-
-          if (rawKeyEventDataAndroid.keyCode == _KEY_CENTER) {
+          var key = rawKeyEventDataAndroid.keyCode;
+          print(key.toString());
+          if (key == _KEY_CENTER) {
             widget.onKeyPress(widget.currentKey);
+            return true;
+          } else if (key == _KEY_HAMBURGER ||
+              key == _KEY_FAST_FORWARD ||
+              key == _KEY_REWIND ||
+              key == _KEY_PLAY_PAUSE) {
+            widget.onKeyPressInt(key);
             return true;
           }
         }
@@ -412,8 +449,10 @@ class _KeyboardDefaultKeyState extends State<_KeyboardDefaultKey> {
 class _KeyboardDefaultActionKey extends StatefulWidget {
   final VirtualKeyboardKey currentKey;
   final onKeyPress;
+  final onKeyPressInt;
 
-  _KeyboardDefaultActionKey(this.currentKey, this.onKeyPress);
+  _KeyboardDefaultActionKey(
+      this.currentKey, this.onKeyPress, this.onKeyPressInt);
 
   @override
   State<StatefulWidget> createState() {
@@ -584,7 +623,7 @@ class _KeyboardDefaultActionKeyState extends State<_KeyboardDefaultActionKey> {
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
-                    Icons.done,
+                    Icons.play_arrow,
                     size: 14,
                     color: isSelected ? Colors.black : Colors.white,
                   ),
@@ -603,26 +642,34 @@ class _KeyboardDefaultActionKeyState extends State<_KeyboardDefaultActionKey> {
     return Expanded(
       child: Focus(
         onFocusChange: (hasFocus) {
-          if (hasFocus) {
-            print('got focus: ${widget.currentKey.text}');
-          } else {
-            print('lost focus: ${widget.currentKey.text}');
-          }
+          // if (hasFocus) {
+          //   print('got focus: ${widget.currentKey.text}');
+          // } else {
+          //   print('lost focus: ${widget.currentKey.text}');
+          // }
           this.setState(() {
             isSelected = hasFocus;
           });
         },
         onKey: (fn, event) {
           //focusNode = fn;
-          print('move made');
+          //print('move made');
           if (event is RawKeyDownEvent &&
               event.data is RawKeyEventDataAndroid) {
             RawKeyDownEvent rawKeyDownEvent = event;
             RawKeyEventDataAndroid rawKeyEventDataAndroid =
                 rawKeyDownEvent.data;
 
-            if (rawKeyEventDataAndroid.keyCode == _KEY_CENTER) {
+            var key = rawKeyEventDataAndroid.keyCode;
+            print(key.toString());
+            if (key == _KEY_CENTER) {
               widget.onKeyPress(widget.currentKey);
+              return true;
+            } else if (key == _KEY_HAMBURGER ||
+                key == _KEY_FAST_FORWARD ||
+                key == _KEY_REWIND ||
+                key == _KEY_PLAY_PAUSE) {
+              widget.onKeyPressInt(key);
               return true;
             }
           }
